@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import AcademicDetails from "./AcademicDetails";
+import axios from "axios";
 
-export default function RegistrationForm() {
+export default function RegistrationForm({email}) {
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     tpoId: "",
     firstName: "",
@@ -44,7 +46,9 @@ export default function RegistrationForm() {
     ];
 
     for (let field of requiredFields) {
+      if(field == "email"){ continue;}
       if (formData[field].length === 0) {
+        console.log(field)
         alert(`Please fill in the ${field} field.`);
         return false;
       }
@@ -55,10 +59,7 @@ export default function RegistrationForm() {
       return false;
     }
 
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      alert("Enter a valid email address.");
-      return false;
-    }
+   
 
     if (formData.contactNo.length !== 10) {
       alert("Enter a valid contact number.");
@@ -70,17 +71,42 @@ export default function RegistrationForm() {
 
   const [showAcademicDetails, setShowAcademicDetails] = useState(false);
 
-  const handleProceedClick = () => {
+  const handleProceedClick =  () => {
     if (handleValidation()) {
-      console.log({...formData,[name]:value})
-      setShowAcademicDetails(true);
+      try {
+        const response =  axios.put(`http://localhost:8000/api/register/${email}`, {
+        firstname :  formData.firstName,
+        middleName:  formData.middleName,
+         lastName: formData.lastName,
+        tpoId:  formData.tpoId,
+        clgId: formData.clgId,
+         mobile: formData.contactNo,
+          gender:formData.gender,
+          dob:formData.dob,
+       branch:   formData.branch,
+        ay: formData.academicYear,
+        loc: formData.residence
+        }).then((response) => {
+          console.log('Successfully updated record:', response.data)})
+      
+        setShowAcademicDetails(true);
+        setIsSubmitted(true);
+       
+      } catch (error) {
+        console.log(error.message)
+        console.error("There was an error saving the registration!", error);
+      }
+      
   
     }
   };
 
   if (showAcademicDetails) {
-    return <AcademicDetails />;
+    if (isSubmitted) {
+      return <AcademicDetails email={email} />;
+    }
   }
+ 
 
   return (
     <div className="max-w-screen-md mx-auto p-6 border border-gray-300 shadow-lg rounded-md bg-white mt-10">
@@ -88,7 +114,7 @@ export default function RegistrationForm() {
         Registration Form
       </h1>
   
-      <form className="space-y-4">
+      <form className="space-y-4" >
         <div className="flex flex-wrap -mx-2 mb-4">
           <div className="w-full sm:w-1/3 px-3">
             <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
@@ -182,12 +208,11 @@ export default function RegistrationForm() {
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
             </label>
-            <input
+            <input disabled
               type="email"
               id="email"
               name="email"
-              value={formData.email}
-              onChange={handleChange}
+              value={email}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
             />
           </div>

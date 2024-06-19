@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import validateForm from './validate';
 import SignInForm from './SignInForm';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
-import axios from 'axios'; // Import eye icons from react-icons library
+import axios from 'axios';
+import RegistrationForm from './RegistrationForm';
 
 const SignUpForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' });
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // State to toggle confirm password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,17 +21,16 @@ const SignUpForm = () => {
     e.preventDefault();
     const validationErrors = validateForm(formData);
     if (Object.keys(validationErrors).length === 0) {
-      // Check if passwords match
       if (formData.password !== formData.confirmPassword) {
         setErrors({ confirmPassword: 'Passwords do not match' });
       } else {
-        try{
-        const res =await axios.post("http://localhost:8000/api/register/",{email:formData.email,pass:formData.password})
-        console.log(res);
-        alert('Form submitted successfully!');
-        
-        }catch(error){
-          console.log(error)
+        try {
+          const res = await axios.post("http://localhost:8000/api/register/", { email: formData.email, pass: formData.password });
+          console.log(res);
+          alert('Form submitted successfully!');
+          setIsSubmitted(true);
+        } catch (error) {
+          console.log(error);
         }
       }
     } else {
@@ -46,10 +47,6 @@ const SignUpForm = () => {
   };
 
   const handleSignInClick = () => {
-    // Handle navigation to sign up form or display sign up form
-    // Example: Show SignUpForm component
-    // You might want to implement this navigation or conditional rendering logic
-    // Here, I'm just rendering the component conditionally based on a state
     setShowSignIn(true);
   };
 
@@ -58,8 +55,11 @@ const SignUpForm = () => {
   if (showSignIn) {
     return <SignInForm />;
   }
-    
-   
+
+  if (isSubmitted) {
+    return <RegistrationForm email={formData.email} />;
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-6 rounded shadow-md w-full max-w-sm">

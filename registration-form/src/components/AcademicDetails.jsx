@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-
-export default function AcademicDetails() {
+import axios from "axios";
+import FIleUp from "./FIleUp.jsx";
+export default function AcademicDetails({email}) {
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     sscPercentage: "",
     sscYear: "",
@@ -11,21 +13,21 @@ export default function AcademicDetails() {
     degreePercentage: "",
     degreeCgpa: "",
     degreeYear: "",
-    resumeFile: null,
+    // resumeFile: null,
   });
 
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData({ ...formData, [name]: value });
-//   };
-const handleChange = (e) => {
-    if (e.target.name === "resumeFile") {
-      setFormData({ ...formData, resumeFile: e.target.files[0] });
-    } else {
-      const { name, value } = e.target;
-      setFormData({ ...formData, [name]: value });
-    }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
+// const handleChange = (e) => {
+//     if (e.target.name === "resumeFile") {
+//       setFormData({ ...formData, resumeFile: e.target.files[0] });
+//     } else {
+//       const { name, value } = e.target;
+//       setFormData({ ...formData, [name]: value });
+//     }
+//   };
   
 
   const isNumber = (value) => {
@@ -40,9 +42,20 @@ const handleChange = (e) => {
     );
   };
 
-  const handleSubmit = (e) => {
+  const isValidPercentage = (value) => {
+    const numValue = parseFloat(value);
+    return numValue >= 0 && numValue <= 100;
+  };
+
+  const isValidCgpa = (value) => {
+    const numValue = parseFloat(value);
+    return numValue >= 0 && numValue <= 10;
+  };
+
+  const handleSubmit =   (e) => {
     e.preventDefault();
-    console.log({...formData,[name]:value})
+    console.log("Academic Details Data:", formData);
+
     const requiredFields = [
       "sscPercentage",
       "sscYear",
@@ -97,11 +110,23 @@ const handleChange = (e) => {
     ];
 
     for (let field of percentageFields) {
-      if (formData[field] && !isNumber(formData[field])) {
-        alert(`Please enter a valid number for ${field}.`);
+      if (
+        formData[field] &&
+        (!isNumber(formData[field]) || !isValidPercentage(formData[field]))
+      ) {
+        alert(`Please enter a valid number between 0 and 100 for ${field}.`);
         return;
       }
     }
+
+    if (
+      formData.degreeCgpa &&
+      (!isNumber(formData.degreeCgpa) || !isValidCgpa(formData.degreeCgpa))
+    ) {
+      alert("Please enter a valid number between 0 and 10 for Degree CGPA.");
+      return;
+    }
+
 
     const yearFields = ["sscYear", "hscYear", "diplomaYear", "degreeYear"];
 
@@ -111,12 +136,36 @@ const handleChange = (e) => {
         return;
       }
     }
+    try{
+    const response =  axios.put(`http://localhost:8000/api/register/form2/${email}`, { 
+      sscPercentage:formData.sscPercentage,
+      sscYear:formData.sscYear,
+      hscPercentage:formData.hscPercentage,
+      hscYear:formData.hscYear,
+      diplomaPercentage:formData.diplomaPercentage,
+      diplomaYear:formData.diplomaYear,
+      degreePercentage:formData.degreePercentage,
+      degreeCgpa:formData.degreeCgpa,
+      degreeYear:formData.degreeYear
+    }).then((response) => {
+      console.log('Successfully updated record:', response.data)})
+      setIsSubmitted(true);
 
-    alert("Form submitted successfully");
+  }
+      catch(error){
+        alert("Error in update");
+        console.log(error);
+      }
+    
+
   };
+  if (isSubmitted) {
+    return <FIleUp email={email} />;
+  }
+  
 
   return (
-    <div className="max-w-screen-md mx-auto p-4">
+    <div className="max-w-screen-md mx-auto  p-6 border border-gray-300 shadow-lg rounded-md bg-white mt-10">
       <h1 className="text-2xl mb-6 text-blue-500 text-center">
         Academic Details
       </h1>
@@ -282,7 +331,7 @@ const handleChange = (e) => {
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
           />
         </div>
-        <div className="flex flex-wrap -mx-3 mb-4">
+        {/* <div className="flex flex-wrap -mx-3 mb-4">
   <div className="w-full px-3">
     <label
       htmlFor="resumeFile"
@@ -297,9 +346,10 @@ const handleChange = (e) => {
       accept=".pdf,.doc,.docx"
       onChange={handleChange}
       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+      required
     />
   </div>
-</div>
+</div> */}
 
         <button
           type="submit"
